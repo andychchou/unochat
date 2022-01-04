@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom';
 import io from 'socket.io-client';
+import Chat from './Chat';
 
 function Game() {
 
@@ -30,8 +31,11 @@ function Game() {
                     <Link to={'/'} className="btn btn-primary">Return to Main Menu</Link>
                 </div>
             </div>
+            <div className="row">
+                <Chat />
+            </div>
         </div>
-    )
+    );
 }
 
 export default Game;
