@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { Switch, Route, Redirect, withRouter } from 'react-router-dom';
 import Home from './Home';
-import Game from './Game';
+import Room from './Room';
 
 class Main extends Component {
     render() {
@@ -13,9 +13,9 @@ class Main extends Component {
             )
         }
 
-        const GamePage = () => {
+        const RoomPage = () => {
             return (
-                <Game
+                <Room
                     // content here
                 />
             )
@@ -26,7 +26,7 @@ class Main extends Component {
                 <p>Main loaded</p>
                 <Switch>
                     <Route exact path='/'>{HomePage}</Route>
-                    <Route exact path='/game'>{GamePage}</Route>
+                    <Route exact path='/game'>{RoomPage}</Route>
                     <Redirect to='/' />
                 </Switch>
             </div>
