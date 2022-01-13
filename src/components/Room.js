@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom';
 import io from 'socket.io-client';
-import Chat from './Chat';
 import Game from './Game';
 
 function Room() {
