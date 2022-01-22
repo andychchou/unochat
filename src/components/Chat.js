@@ -2,15 +2,12 @@ import React, { useEffect, useState, useRef } from 'react';
 import { Form, InputGroup, Button } from 'react-bootstrap';
 
 function Chat(props) {
-    const [user, setUser] = useState();
     const [convo, setConvo ] = useState([{text: 'line 1', sender: 'person1'}]);
     const [text, setText] = useState('');
 
-    const idRef = useRef();
-    
     const messages = convo.map(message => {
         const name = message.sender;
-        const fromMe = (user === message.sender);
+        const fromMe = (props.user === message.sender);
         return {...message, senderName: name, fromMe }
     });
 
@@ -20,18 +17,13 @@ function Chat(props) {
     }
 
     function sendMessage(text) {
-        addMessageToConvo({ text, sender: user })
+        addMessageToConvo({ text, sender: props.user })
     }
 
     function handleSubmit(e) {
         e.preventDefault();
         sendMessage(text);
         setText('');
-    }
-
-    function handleSubmitName(e) {
-        e.preventDefault();
-        setUser(idRef.current.value);
     }
 
     return (
@@ -82,22 +74,8 @@ function Chat(props) {
                         </InputGroup>
                     </Form.Group>
                 </Form>
-                <Form onSubmit={handleSubmitName}>
-                    <Form.Group>
-                        <InputGroup>
-                            <Form.Label>Enter Username</Form.Label>
-                            <Form.Control
-                                as="textarea"
-                                ref={idRef}
-                                required
-                                style={{ height: '75px', resize: 'none' }}
-                            />
-                            <Button type="submit">Enter</Button>
-                        </InputGroup>
-                    </Form.Group>
-                </Form>
                 <div className="row">
-                Your username: {user}
+                Your username: {props.user}
                 </div>
             </div>
         </div>

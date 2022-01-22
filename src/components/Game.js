@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import { Link } from 'react-router-dom';
 import { Form, InputGroup, Modal, Button } from 'react-bootstrap';
 import io from 'socket.io-client';
@@ -6,10 +6,12 @@ import Chat from './Chat';
 
 function Game() {
     const [showModal, setShowModal] = useState(true);
+    const [user, setUser] = useState();
+    const userRef = useRef();
 
     function handleSubmit(e) {
         e.preventDefault();
-        // set username code here
+        setUser(userRef.current.value);
         setShowModal(false);
     }
 
@@ -17,7 +19,7 @@ function Game() {
         <React.Fragment>
             <div className="container">
                 <div className="row">
-                    <Chat />
+                    <Chat user={user}/>
                 </div>
                 <div className="row">
                     <div className="col">
@@ -41,6 +43,7 @@ function Game() {
                             <InputGroup>
                                 <Form.Control
                                     as="textarea"
+                                    ref={userRef}
                                     required
                                     style={{resize: 'none'}}
                                     autoFocus
