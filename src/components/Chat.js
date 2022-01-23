@@ -1,9 +1,14 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Form, InputGroup, Button } from 'react-bootstrap';
 
 function Chat(props) {
     const [convo, setConvo ] = useState([{text: 'line 1', sender: 'person1'}]);
     const [text, setText] = useState('');
+    const setRef = useCallback(node => {
+        if (node) {
+            node.scrollIntoView({smooth: true})
+        }
+    }, [])
 
     const messages = convo.map(message => {
         const name = message.sender;
@@ -11,6 +16,22 @@ function Chat(props) {
         return {...message, senderName: name, fromMe }
     });
 
+    useEffect(() => {
+        const listener = event => {
+            if (event.code === "Enter" || event.code === "NumpadEnter") {
+                event.preventDefault();
+                // callMyFunction();
+                if (text !== '') {
+                    handleSubmit();
+                }
+            }
+        };
+        document.addEventListener("keydown", listener);
+        return () => {
+            document.removeEventListener("keydown", listener);
+        };
+    },);
+    
     function addMessageToConvo({ text, sender }) {
         const newMessage = { text, sender };
         setConvo([...convo, newMessage]);
@@ -20,8 +41,7 @@ function Chat(props) {
         addMessageToConvo({ text, sender: props.user })
     }
 
-    function handleSubmit(e) {
-        e.preventDefault();
+    function handleSubmit() {
         sendMessage(text);
         setText('');
     }
@@ -37,8 +57,10 @@ function Chat(props) {
                         <div className="d-flex flex-column align-items-start justify-content-end px-2">
                             Convo here
                             {messages.map((message, index) => {
+                                const lastMessage = messages.length - 1 === index
                                 return (
                                     <div
+                                        ref={lastMessage ? setRef : null}
                                         key={index}
                                         className={`my-1 d-flex flex-column ${message.fromMe ? 'align-self-end': ''}`}
                                     >
@@ -60,7 +82,10 @@ function Chat(props) {
                 </div>
             </div>
             <div className="row">
-                <Form onSubmit={handleSubmit}>
+                <Form onSubmit={e => {
+                    e.preventDefault();
+                    handleSubmit()
+                    }}>
                     <Form.Group>
                         <InputGroup>
                             <Form.Control
