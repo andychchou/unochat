@@ -1,29 +1,38 @@
 import React, { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom';
-import io from 'socket.io-client';
+import queryString from 'query-string';
 import Game from './Game';
+import { SocketProvider } from '../SocketProvider';
 
 function Room() {
-    const ENDPOINT = 'http://localhost:3000'
 
-    useEffect(() => {
-        // const socket = Socket.io("http://localhost:3000", { transports: ['websocket'] });
+    const data = queryString.parse(window.location.search);
+    console.log(data);
 
-        const connectionOptions =  {
-            "forceNew" : true,
-            "reconnectionAttempts": "Infinity", 
-            "timeout" : 10000, 
-            "transports" : ["websocket"]
-        }
-        const socket = io.connect(ENDPOINT, connectionOptions)
+    const [room, setRoom] = useState(data.roomCode);
 
-        socket.on('message', message => {
-            console.log(message);
-        });
-    })
+    // let socket;
+    // const ENDPOINT = 'http://localhost:3000'
+
+    // useEffect(() => {
+    //     // const socket = Socket.io("http://localhost:3000", { transports: ['websocket'] });
+
+    //     const connectionOptions =  {
+    //         "forceNew" : true,
+    //         "reconnectionAttempts": "Infinity", 
+    //         "timeout" : 10000, 
+    //         "transports" : ["websocket"]
+    //     }
+    //     socket = io.connect(ENDPOINT, connectionOptions)
+
+    //     socket.on('message', message => {
+    //         console.log(message);
+    //     });
+    // })
 
     return (
-        <Game />
+        <SocketProvider>
+            <Game room={room}/>
+        </SocketProvider>
     );
 }
 

@@ -1,7 +1,9 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Form, InputGroup, Button } from 'react-bootstrap';
+import { useSocket } from '../SocketProvider';
 
 function Chat(props) {
+    
     const [convo, setConvo ] = useState([{text: 'line 1', sender: 'person1'}]);
     const [text, setText] = useState('');
     const setRef = useCallback(node => {
@@ -10,11 +12,43 @@ function Chat(props) {
         }
     }, [])
 
+    const socket = useSocket();
+
     const messages = convo.map(message => {
         const name = message.sender;
         const fromMe = (props.user === message.sender);
         return {...message, senderName: name, fromMe }
     });
+
+    const addMessageToConvo = useCallback(({ text, sender }) => {
+        const newMessage = { text, sender };
+        console.log(convo);
+        console.log(newMessage);
+        setConvo([...convo, newMessage]);
+        console.log(convo);
+    }, [convo])
+
+    function sendMessage(text) {
+        socket.emit('send-message', {text, sender: props.user});
+        console.log(socket);
+        addMessageToConvo({ text, sender: props.user })
+    }
+
+    function handleSubmit() {
+        sendMessage(text);
+        setText('');
+    }
+
+
+    useEffect(() => {
+        if (socket == null) {
+            console.log('socket not found');
+            return
+        }
+        socket.on('receive-message', addMessageToConvo);
+        
+        return () => socket.off('receive-message')
+    }, [socket, addMessageToConvo])
 
     useEffect(() => {
         const listener = event => {
@@ -32,19 +66,7 @@ function Chat(props) {
         };
     },);
     
-    function addMessageToConvo({ text, sender }) {
-        const newMessage = { text, sender };
-        setConvo([...convo, newMessage]);
-    }
 
-    function sendMessage(text) {
-        addMessageToConvo({ text, sender: props.user })
-    }
-
-    function handleSubmit() {
-        sendMessage(text);
-        setText('');
-    }
 
     return (
         <div className="col">

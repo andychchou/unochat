@@ -1,10 +1,9 @@
 import React, { useEffect, useState, useRef } from 'react'
 import { Link } from 'react-router-dom';
 import { Form, InputGroup, Modal, Button } from 'react-bootstrap';
-import io from 'socket.io-client';
 import Chat from './Chat';
 
-function Game() {
+function Game({room}) {
     const [showModal, setShowModal] = useState(true);
     const [user, setUser] = useState();
     const userRef = useRef();
