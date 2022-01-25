@@ -2,9 +2,9 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { Form, InputGroup, Button } from 'react-bootstrap';
 import { useSocket } from '../SocketProvider';
 
-function Chat(props) {
+function Chat({user, userList}) {
     
-    const [convo, setConvo ] = useState([{text: 'line 1', sender: 'person1'}]);
+    const [convo, setConvo ] = useState([]);
     const [text, setText] = useState('');
     const setRef = useCallback(node => {
         if (node) {
@@ -16,22 +16,18 @@ function Chat(props) {
 
     const messages = convo.map(message => {
         const name = message.sender;
-        const fromMe = (props.user === message.sender);
+        const fromMe = (user === message.sender);
         return {...message, senderName: name, fromMe }
     });
 
     const addMessageToConvo = useCallback(({ text, sender }) => {
         const newMessage = { text, sender };
-        console.log(convo);
-        console.log(newMessage);
         setConvo([...convo, newMessage]);
-        console.log(convo);
     }, [convo])
 
     function sendMessage(text) {
-        socket.emit('send-message', {text, sender: props.user});
-        console.log(socket);
-        addMessageToConvo({ text, sender: props.user })
+        socket.emit('send-message', {text, sender: user});
+        addMessageToConvo({ text, sender: user })
     }
 
     function handleSubmit() {
@@ -39,10 +35,8 @@ function Chat(props) {
         setText('');
     }
 
-
     useEffect(() => {
         if (socket == null) {
-            console.log('socket not found');
             return
         }
         socket.on('receive-message', addMessageToConvo);
@@ -64,20 +58,23 @@ function Chat(props) {
         return () => {
             document.removeEventListener("keydown", listener);
         };
-    },);
+    });
     
-
-
     return (
         <div className="col">
             <div className="row">
                 <div className="col-sm-2">
                     Users List
+                    <ul type="none">
+                        {userList.map(user => {
+                            return <li key={userList.indexOf(user)}>{user}</li>
+                        })}
+                    </ul>
                 </div>
                 <div className="col-sm-10">
                     <div className="d-flex flex-column flex-grow-1 overflow-auto" style={{ height: '360px'}}>
                         <div className="d-flex flex-column align-items-start justify-content-end px-2">
-                            Convo here
+                            Chat
                             {messages.map((message, index) => {
                                 const lastMessage = messages.length - 1 === index
                                 return (
@@ -107,7 +104,7 @@ function Chat(props) {
                 <Form onSubmit={e => {
                     e.preventDefault();
                     handleSubmit()
-                    }}>
+                }}>
                     <Form.Group>
                         <InputGroup>
                             <Form.Control
@@ -122,7 +119,7 @@ function Chat(props) {
                     </Form.Group>
                 </Form>
                 <div className="row">
-                Your username: {props.user}
+                Your username: {user}
                 </div>
             </div>
         </div>

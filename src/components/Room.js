@@ -4,10 +4,7 @@ import Game from './Game';
 import { SocketProvider } from '../SocketProvider';
 
 function Room() {
-
     const data = queryString.parse(window.location.search);
-    console.log(data);
-
     const [room, setRoom] = useState(data.roomCode);
 
     // let socket;
