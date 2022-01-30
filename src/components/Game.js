@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react'
 import { Link } from 'react-router-dom';
 import { Form, InputGroup, Modal, Button } from 'react-bootstrap';
 import Chat from './Chat';
+import Uno from './Uno';
 import { useSocket } from '../SocketProvider';
 
 function Game({room}) {
@@ -47,6 +48,10 @@ function Game({room}) {
         <React.Fragment>
             <div className="container">
                 <div className="row">
+                    Room Code: {room}
+                </div>
+                <div className="row">
+                    <Uno />
                     <Chat user={user} userList={userList}/>
                 </div>
                 <div className="row">
