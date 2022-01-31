@@ -54,9 +54,8 @@ function Game({room}) {
                     <Uno />
                     <Chat user={user} userList={userList}/>
                 </div>
-                <div className="row">
+                <div className="row mt-1">
                     <div className="col">
-                        <p>Game on</p>
                         <Link to={'/'} className="btn btn-primary">Return to Main Menu</Link>
                     </div>
                 </div>

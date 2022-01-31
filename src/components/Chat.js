@@ -48,7 +48,6 @@ function Chat({user, userList}) {
         const listener = event => {
             if (event.code === "Enter" || event.code === "NumpadEnter") {
                 event.preventDefault();
-                // callMyFunction();
                 if (text !== '') {
                     handleSubmit();
                 }
@@ -63,18 +62,21 @@ function Chat({user, userList}) {
     return (
         <div className="col-md">
             <div className="row">
-                <div className="col-sm-2">
+                <div className="col-2">
                     Users List
-                    <ul type="none">
+                    <ul className="p-0 m-0" type="none">
                         {userList.map(user => {
                             return <li key={userList.indexOf(user)}>{user}</li>
                         })}
                     </ul>
                 </div>
-                <div className="col-sm-10">
+                <div className="col-10">
+                    <div className="row">
+                        Your username: {user}
+                    </div>
                     <div className="d-flex flex-column flex-grow-1 overflow-auto" style={{ height: '360px'}}>
                         <div className="d-flex flex-column align-items-start justify-content-end px-2">
-                            Chat
+
                             {messages.map((message, index) => {
                                 const lastMessage = messages.length - 1 === index
                                 return (
@@ -118,9 +120,6 @@ function Chat({user, userList}) {
                         </InputGroup>
                     </Form.Group>
                 </Form>
-                <div className="row">
-                Your username: {user}
-                </div>
             </div>
         </div>
     );

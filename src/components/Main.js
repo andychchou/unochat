@@ -23,7 +23,6 @@ class Main extends Component {
 
         return(
             <div>
-                <p>Main loaded</p>
                 <Switch>
                     <Route exact path='/'>{HomePage}</Route>
                     <Route exact path='/game'>{RoomPage}</Route>
