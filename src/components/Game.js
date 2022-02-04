@@ -40,7 +40,7 @@ function Game({room}) {
         });
         // Join room success
         socket.on('joinRoomOK', ({user}) => {
-            socket.emit('joinRoom', { user, room: room })
+            socket.emit('joinRoom', { user, room: room, game: 'uno'})
         });
     }, [socket, room])
 
