@@ -60,7 +60,7 @@ function Chat({user, userList}) {
     });
     
     return (
-        <div className="col-md">
+        <div className="col-lg">
             <div className="row">
                 <div className="col-2">
                     Users List

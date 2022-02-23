@@ -35,8 +35,8 @@ function Uno() {
 
     return (
         <div className="col-sm-auto">
-            <div className="">
-                Uno Game Here, Will take ~360px width across.
+            <div className="unobox">
+                Uno Game Here, will take 600px width across.
             </div>
         </div>
     )
