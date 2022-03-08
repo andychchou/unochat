@@ -1,12 +1,11 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useSocket } from '../SocketProvider';
 
-function Uno() {
+function Uno(props) {
     const socket = useSocket();
 
     const [gameOver, setGameOver] = useState(true)
     const [winner, setWinner] = useState(0)
-    const [maxPlayers, setMaxPlayers] = useState(0)
     const [turn, setTurn] = useState(0)
     const [playerHand, setPlayerHand] = useState([])
     const [playerSeat, setPlayerSeat] = useState(0)

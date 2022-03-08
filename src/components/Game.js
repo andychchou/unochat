@@ -11,6 +11,8 @@ function Game({room}) {
     const userRef = useRef();
     const [userList, setUserList] = useState([]);
     const [retryName, setRetryName] = useState(false);
+    const [maxPlayers, setMaxPlayers] = useState(0);
+    const maxPlayersRef = useRef();
 
     const socket = useSocket();
 
@@ -24,6 +26,13 @@ function Game({room}) {
         setUserList(userList);
         setRetryName(true);
         setShowModal(true);
+    }
+
+    function handleGameSetup() {
+        console.log("gamesetup initiated");
+        socket.emit('gameSetup', () => {
+
+        });
     }
 
     useEffect(() => {
@@ -42,17 +51,26 @@ function Game({room}) {
         socket.on('joinRoomOK', ({user}) => {
             socket.emit('joinRoom', { user, room: room, game: 'uno'})
         });
+        // After receiving response from setting up game
+        socket.on('gameSetupConfirmed', () => {
+            
+            // work on code here
+
+            // Set inital game states
+            
+        });
     }, [socket, room])
 
     return (
         <React.Fragment>
             <div className="container">
                 <div className="row">
-                    Room Code: {room}
+                    <p>Room Code: {room}</p>
+                    <p>Max Players: {maxPlayers}</p>
                 </div>
                 <div className="row">
-                    <Uno />
-                    <Chat user={user} userList={userList}/>
+                    <UnoShell maxPlayers={maxPlayers} setMaxPlayers={setMaxPlayers} maxPlayersRef={maxPlayersRef} handleGameSetup={handleGameSetup} />
+                    <Chat user={user} userList={userList} />
                 </div>
                 <div className="row mt-1">
                     <div className="col">
@@ -105,6 +123,43 @@ function RetryMsg({retryName, userList}) {
     } else {
         return <div></div>
     }
+}
+
+function UnoShell({maxPlayers, setMaxPlayers, maxPlayersRef, handleGameSetup}) {
+    if (maxPlayers === 0) {
+        return <UnoSetup setMaxPlayers={setMaxPlayers} maxPlayersRef={maxPlayersRef} handleGameSetup={handleGameSetup} />
+    } else {
+        return <Uno />
+    }
+}
+
+function UnoSetup({setMaxPlayers, maxPlayersRef, handleGameSetup}) {
+    return (
+        <div className="col-sm-auto">
+            <div className="unobox">
+                <h3>Select the number of players: </h3>
+                <Form onSubmit={e => {
+                    e.preventDefault();
+                    setMaxPlayers(maxPlayersRef.current.value);
+                    handleGameSetup();
+                }}>
+                    <Form.Group>
+                        <InputGroup>
+                            <Form.Control
+                                as="select"
+                                ref={maxPlayersRef}
+                            >
+                                <option value="2">(2) Two Players</option>
+                                <option value="3">(3) Three Players</option>
+                                <option value="4">(4) Four Players</option>
+                            </Form.Control>
+                            <Button type="submit">Create Game</Button>
+                        </InputGroup>
+                    </Form.Group>
+                </Form>
+            </div>
+        </div>
+    )
 }
 
 export default Game;
