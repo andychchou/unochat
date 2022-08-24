@@ -5,7 +5,7 @@ import Chat from './Chat';
 import Uno from './Uno';
 import { useSocket } from '../SocketProvider';
 
-function Game({room}) {
+function Game({ room }) {
     const [showModal, setShowModal] = useState(true);
     const [user, setUser] = useState();
     const userRef = useRef();
@@ -19,7 +19,7 @@ function Game({room}) {
     function handleSubmit() {
         setUser(userRef.current.value);
         setShowModal(false);
-        socket.emit('tryJoinRoom', { user: userRef.current.value , room: room });
+        socket.emit('tryJoinRoom', { user: userRef.current.value, room: room });
     }
 
     function userExists(userList) {
@@ -31,8 +31,12 @@ function Game({room}) {
     function handleGameSetup() {
         console.log("gamesetup initiated");
         socket.emit('gameSetup', () => {
-
+            // WIP
         });
+    }
+
+    function handleLeaveRoom() {
+        socket.disconnect();
     }
 
     useEffect(() => {
@@ -48,16 +52,16 @@ function Game({room}) {
             userExists(userList);
         });
         // Join room success
-        socket.on('joinRoomOK', ({user}) => {
-            socket.emit('joinRoom', { user, room: room, game: 'uno'})
+        socket.on('joinRoomOK', ({ user }) => {
+            socket.emit('joinRoom', { user, room: room, game: 'uno' })
         });
         // After receiving response from setting up game
         socket.on('gameSetupConfirmed', () => {
-            
+
             // work on code here
 
             // Set inital game states
-            
+
         });
     }, [socket, room])
 
@@ -74,7 +78,12 @@ function Game({room}) {
                 </div>
                 <div className="row mt-1">
                     <div className="col">
-                        <Link to={'/'} className="btn btn-primary">Return to Main Menu</Link>
+                        <Link
+                            to={'/'} className="btn btn-primary"
+                            onClick={handleLeaveRoom}
+                        >
+                            Return to Main Menu
+                        </Link>
                     </div>
                 </div>
             </div>
@@ -88,7 +97,7 @@ function Game({room}) {
                     <Modal.Title>Enter a username</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
-                    <RetryMsg retryName={retryName} userList={userList}/>
+                    <RetryMsg retryName={retryName} userList={userList} />
                     <Form onSubmit={e => {
                         e.preventDefault();
                         handleSubmit();
@@ -99,7 +108,7 @@ function Game({room}) {
                                     as="textarea"
                                     ref={userRef}
                                     required
-                                    style={{resize: 'none'}}
+                                    style={{ resize: 'none' }}
                                     autoFocus
                                 />
                                 <Button type="submit">Enter</Button>
@@ -112,7 +121,7 @@ function Game({room}) {
     );
 }
 
-function RetryMsg({retryName, userList}) {
+function RetryMsg({ retryName, userList }) {
     if (retryName) {
         return (
             <div>
@@ -125,7 +134,7 @@ function RetryMsg({retryName, userList}) {
     }
 }
 
-function UnoShell({maxPlayers, setMaxPlayers, maxPlayersRef, handleGameSetup}) {
+function UnoShell({ maxPlayers, setMaxPlayers, maxPlayersRef, handleGameSetup }) {
     if (maxPlayers === 0) {
         return <UnoSetup setMaxPlayers={setMaxPlayers} maxPlayersRef={maxPlayersRef} handleGameSetup={handleGameSetup} />
     } else {
@@ -133,7 +142,7 @@ function UnoShell({maxPlayers, setMaxPlayers, maxPlayersRef, handleGameSetup}) {
     }
 }
 
-function UnoSetup({setMaxPlayers, maxPlayersRef, handleGameSetup}) {
+function UnoSetup({ setMaxPlayers, maxPlayersRef, handleGameSetup }) {
     return (
         <div className="col-sm-auto">
             <div className="unobox">
@@ -150,8 +159,8 @@ function UnoSetup({setMaxPlayers, maxPlayersRef, handleGameSetup}) {
                                 ref={maxPlayersRef}
                             >
                                 <option value="2">(2) Two Players</option>
-                                <option value="3">(3) Three Players</option>
-                                <option value="4">(4) Four Players</option>
+                                {/* <option value="3">(3) Three Players</option>
+                                <option value="4">(4) Four Players</option> */}
                             </Form.Control>
                             <Button type="submit">Create Game</Button>
                         </InputGroup>
