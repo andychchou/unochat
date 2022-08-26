@@ -30,9 +30,7 @@ function Game({ room }) {
 
     function handleGameSetup() {
         console.log("gamesetup initiated");
-        socket.emit('gameSetup', () => {
-            // WIP
-        });
+        socket.emit('gameSetup', { room: room, maxPlayers: maxPlayersRef.current.value });
     }
 
     function handleLeaveRoom() {

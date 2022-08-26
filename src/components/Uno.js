@@ -5,6 +5,9 @@ import { useSocket } from '../SocketProvider';
 function Uno(props) {
     const socket = useSocket();
 
+    const [startToggle, setStartToggle] = useState(false)
+
+    const [playersList, setPlayersList] = useState([])
     const [gameOver, setGameOver] = useState(true)
     const [winner, setWinner] = useState(0)
     const [turn, setTurn] = useState(0)
@@ -24,12 +27,14 @@ function Uno(props) {
 
     }
 
-    // Testing only
     function startGame() {
         setPlayerHand(['Blue_0', 'Blue_1'])
         setOpponentHandCount(5)
     }
-    // Testing only
+
+    function joinGame() {
+
+    }
 
     // On component mount
     useEffect(() => {
