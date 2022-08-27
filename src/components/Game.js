@@ -13,6 +13,7 @@ function Game({ room }) {
     const [retryName, setRetryName] = useState(false);
     const [maxPlayers, setMaxPlayers] = useState(0);
     const maxPlayersRef = useRef();
+    const [host, setHost] = useState('');
 
     const socket = useSocket();
 
@@ -53,6 +54,11 @@ function Game({ room }) {
         socket.on('joinRoomOK', ({ user }) => {
             socket.emit('joinRoom', { user, room: room, game: 'uno' })
         });
+        // Update room host
+        socket.on('updateHost', ({ roomHostUser }) => {
+            setHost(roomHostUser)
+        })
+
         // After receiving response from setting up game
         socket.on('gameSetupConfirmed', () => {
 
@@ -71,7 +77,7 @@ function Game({ room }) {
                     <p>Max Players: {maxPlayers}</p>
                 </div>
                 <div className="row">
-                    <UnoShell maxPlayers={maxPlayers} setMaxPlayers={setMaxPlayers} maxPlayersRef={maxPlayersRef} handleGameSetup={handleGameSetup} />
+                    <UnoShell user={user} host={host} maxPlayers={maxPlayers} setMaxPlayers={setMaxPlayers} maxPlayersRef={maxPlayersRef} handleGameSetup={handleGameSetup} />
                     <Chat user={user} userList={userList} />
                 </div>
                 <div className="row mt-1">
@@ -132,8 +138,10 @@ function RetryMsg({ retryName, userList }) {
     }
 }
 
-function UnoShell({ maxPlayers, setMaxPlayers, maxPlayersRef, handleGameSetup }) {
-    if (maxPlayers === 0) {
+function UnoShell({ user, host, maxPlayers, setMaxPlayers, maxPlayersRef, handleGameSetup }) {
+    if (host === '') {
+        return <p>UNO</p>
+    } else if (maxPlayers === 0 && user === host) {
         return <UnoSetup setMaxPlayers={setMaxPlayers} maxPlayersRef={maxPlayersRef} handleGameSetup={handleGameSetup} />
     } else {
         return <Uno />
