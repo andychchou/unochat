@@ -2,12 +2,13 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { Button } from 'react-bootstrap';
 import { useSocket } from '../SocketProvider';
 
-function Uno(props) {
+function Uno({ room, host, user }) {
     const socket = useSocket();
 
     const [startToggle, setStartToggle] = useState(false)
 
     const [playersList, setPlayersList] = useState([])
+    const [gameStarted, setGameStarted] = useState(false)
     const [gameOver, setGameOver] = useState(true)
     const [winner, setWinner] = useState(0)
     const [turn, setTurn] = useState(0)
@@ -17,7 +18,8 @@ function Uno(props) {
     const [currentNumber, setCurrentNumber] = useState('')
     const [playedCardsPile, setPlayedCardsPile] = useState([])
     const [drawCardPile, setDrawCardPile] = useState([])
-    const [opponentHandCount, setOpponentHandCount] = useState(0)
+    const [playerBaseHandCount, setPlayerBaseHandCount] = useState(0)
+    const [playerAcrossHandCount, setPlayerAcrossHandCount] = useState(0)
 
     const onCardPlayedHandler = (playedCard) => {
 
@@ -28,22 +30,25 @@ function Uno(props) {
     }
 
     function startGame() {
-        setPlayerHand(['Blue_0', 'Blue_1'])
-        setOpponentHandCount(5)
+        setPlayerHand(['Blue_0', 'Blue_1']);
+        setPlayerAcrossHandCount(5);
+        setPlayerSeat(1);
     }
 
     function joinGame() {
-
+        setPlayersList([...playersList, user])
     }
 
     // On component mount
     useEffect(() => {
-
+        socket.emit('requestGameState', { room });
     }, [])
 
     // Socket stuff
     useEffect(() => {
-
+        if (!socket) {
+            return
+        }
     }, [socket])
 
     return (
@@ -51,34 +56,40 @@ function Uno(props) {
             <div className="unobox">
                 <p>Uno Game Here, will take 600px width across.</p>
                 <div>
-                    <RenderOpponentHandDisplay handCount={opponentHandCount} />
+                    <CardsDownCountToHand handCount={playerAcrossHandCount} />
                 </div>
                 <div>
                     <span>
-                        <Button onClick={startGame}>Start Game</Button>
+                        <StartJoinGameButton host={host} user={user} playersList={playersList} gameStarted={gameStarted} startGame={startGame} joinGame={joinGame} />
                     </span>
                 </div>
                 <div>
-                    <RenderPlayerHandDisplay playerHand={playerHand} />
+                    <RenderPlayerBaseHandDisplay playerSeat={playerSeat} playerHand={playerHand} handCount={playerBaseHandCount} />
                 </div>
             </div>
         </div>
     )
 }
 
-function RenderPlayerHandDisplay({ playerHand }) {
-    const hand = playerHand.map((card, index) => {
-        return (
-            <div key={`playerCard${index}`} className="card">
-                <img src={require('../assets/' + card + '.png').default} />
-            </div>
-        )
-    })
-    return hand;
+// faced-up cards for active player
+function RenderPlayerHandDisplay({ playerSeat, playerHand }) {
+    if (playerSeat !== 0) {
+        const hand = playerHand.map((card, index) => {
+            return (
+                <div key={`playerCard${index}`} className="card">
+                    <img src={require('../assets/' + card + '.png').default} />
+                </div>
+            )
+        })
+        return hand;
+    } else {
+        return <div />
+    }
 }
 
-function RenderOpponentHandDisplay({ handCount }) {
-    const handArray = [];
+// faced-down cards render
+function CardsDownCountToHand({ handCount }) {
+    const handArray = []
     if (handCount > 0) {
         for (let i = 0; i < handCount; i++) {
             handArray.push(
@@ -88,7 +99,28 @@ function RenderOpponentHandDisplay({ handCount }) {
             )
         }
     }
-    return handArray;
+    return handArray
+}
+
+function RenderPlayerBaseHandDisplay({ playerSeat, playerHand, handCount }) {
+    if (playerSeat !== 0) {
+        return <RenderPlayerHandDisplay playerSeat={playerSeat} playerHand={playerHand} />
+    } else {
+        return <CardsDownCountToHand handCount={handCount} />
+    }
+}
+
+function StartJoinGameButton({ host, user, gameStarted, startGame, joinGame }) {
+    if (gameStarted === false) {
+        if (host === user) {
+            return <Button onClick={startGame}>Start Game</Button>
+        } else {
+            // players list logic
+            return <Button onClick={joinGame}>Join Game</Button>
+        }
+    } else {
+        return <span></span>
+    }
 }
 
 // Test functions

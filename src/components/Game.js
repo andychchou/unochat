@@ -77,7 +77,7 @@ function Game({ room }) {
                     <p>Max Players: {maxPlayers}</p>
                 </div>
                 <div className="row">
-                    <UnoShell user={user} host={host} maxPlayers={maxPlayers} setMaxPlayers={setMaxPlayers} maxPlayersRef={maxPlayersRef} handleGameSetup={handleGameSetup} />
+                    <UnoShell room={room} user={user} host={host} maxPlayers={maxPlayers} setMaxPlayers={setMaxPlayers} maxPlayersRef={maxPlayersRef} handleGameSetup={handleGameSetup} />
                     <Chat user={user} userList={userList} />
                 </div>
                 <div className="row mt-1">
@@ -138,13 +138,13 @@ function RetryMsg({ retryName, userList }) {
     }
 }
 
-function UnoShell({ user, host, maxPlayers, setMaxPlayers, maxPlayersRef, handleGameSetup }) {
+function UnoShell({ room, user, host, maxPlayers, setMaxPlayers, maxPlayersRef, handleGameSetup }) {
     if (host === '') {
         return <p>UNO</p>
     } else if (maxPlayers === 0 && user === host) {
         return <UnoSetup setMaxPlayers={setMaxPlayers} maxPlayersRef={maxPlayersRef} handleGameSetup={handleGameSetup} />
     } else {
-        return <Uno />
+        return <Uno room={room} host={host} user={user}/>
     }
 }
 
