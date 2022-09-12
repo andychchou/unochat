@@ -34,7 +34,8 @@
 }
 
 .unobox {
-  width: 600px
+  width: 600px;
+  height: 500px;
 }
 
 img {
@@ -48,4 +49,8 @@ img {
   width: 65px;
   margin-left: -44px;
 
+}
+
+.center-row {
+  height: 300px;
 }

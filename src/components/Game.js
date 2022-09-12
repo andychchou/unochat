@@ -74,7 +74,6 @@ function Game({ room }) {
             <div className="container">
                 <div className="row">
                     <p>Room Code: {room}</p>
-                    <p>Max Players: {maxPlayers}</p>
                 </div>
                 <div className="row">
                     <UnoShell room={room} user={user} host={host} maxPlayers={maxPlayers} setMaxPlayers={setMaxPlayers} maxPlayersRef={maxPlayersRef} handleGameSetup={handleGameSetup} />
@@ -144,7 +143,7 @@ function UnoShell({ room, user, host, maxPlayers, setMaxPlayers, maxPlayersRef, 
     } else if (maxPlayers === 0 && user === host) {
         return <UnoSetup setMaxPlayers={setMaxPlayers} maxPlayersRef={maxPlayersRef} handleGameSetup={handleGameSetup} />
     } else {
-        return <Uno room={room} host={host} user={user}/>
+        return <Uno room={room} host={host} user={user} />
     }
 }
 
