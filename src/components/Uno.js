@@ -23,21 +23,49 @@ function Uno({ room, host, user }) {
     const [playerBaseHandCount, setPlayerBaseHandCount] = useState(0)
     const [playerAcrossHandCount, setPlayerAcrossHandCount] = useState(0)
 
-    const onCardPlayedHandler = (playedCard) => {
+    const startGame = () => {
+        socket.emit('startGame', { room })
+    }
 
+    const joinGame = () => {
+        // setPlayersList([...playersList, user])
+        socket.emit('joinGame', { user, room })
     }
 
     const onCardDrawnHandler = () => {
 
     }
 
-    function startGame() {
-        socket.emit('startGame', { room })
+    const onCardPlayedHandler = (playedCard) => {
+
     }
 
-    function joinGame() {
-        // setPlayersList([...playersList, user])
-        socket.emit('joinGame', { user, room })
+    const onCardClicked = (event, card) => {
+        console.log(card);
+        console.log(turn);
+        console.log(playerSeat);
+        if (turn === playerSeat) {
+            const isPlayable = (card) => {
+                if (card.charAt(0) === currentNumber) return true;
+                if (card.charAt(1) === currentColor) return true;
+                if (card === 'W') return true;
+                return false;
+            }
+
+            if (isPlayable(card)) {
+                onCardPlayedHandler(card);
+            } else if (card === 'D4W') {
+                const playableCards = playerHand.filter(card => isPlayable(card));
+                if (playableCards.length = 0) {
+                    onCardPlayedHandler(card);
+                } else {
+                    console.log("You played Draw 4 illegally.");
+                    onCardPlayedHandler(card);
+                }
+            } else {
+                console.log("You cannont play this card.");
+            }
+        }
     }
 
     // On component mount
@@ -112,7 +140,7 @@ function Uno({ room, host, user }) {
                 </div>
                 <div className="row">
                     <div className="">
-                        <RenderPlayerBaseHandDisplay playerSeat={playerSeat} playerHand={playerHand} handCount={playerBaseHandCount} />
+                        <RenderPlayerBaseHandDisplay playerSeat={playerSeat} playerHand={playerHand} handCount={playerBaseHandCount} onCardClicked={onCardClicked} />
                     </div>
                 </div>
             </div>
@@ -121,11 +149,11 @@ function Uno({ room, host, user }) {
 }
 
 // faced-up cards for active player
-function RenderPlayerHandDisplay({ playerSeat, playerHand }) {
+function RenderPlayerHandDisplay({ playerSeat, playerHand, onCardClicked }) {
     if (playerSeat !== -1) {
         const hand = playerHand.map((card, index) => {
             return (
-                <div key={`playerCard${index}`} className="card">
+                <div key={`playerCard${index}`} className="card" onClick={event => onCardClicked(event, card)}>
                     <img src={require('../assets/' + card + '.png').default} />
                 </div>
             )
@@ -151,9 +179,9 @@ function CardsDownCountToHand({ handCount }) {
     return handArray
 }
 
-function RenderPlayerBaseHandDisplay({ playerSeat, playerHand, handCount }) {
+function RenderPlayerBaseHandDisplay({ playerSeat, playerHand, handCount, onCardClicked }) {
     if (playerSeat !== -1) {
-        return <RenderPlayerHandDisplay playerSeat={playerSeat} playerHand={playerHand} />
+        return <RenderPlayerHandDisplay playerSeat={playerSeat} playerHand={playerHand} onCardClicked={onCardClicked} />
     } else {
         return <CardsDownCountToHand handCount={handCount} />
     }
@@ -180,15 +208,15 @@ function StartJoinGameButton({ host, user, gameStarted, playersList, maxPlayers,
 }
 
 function RenderDeck({ gameStarted }) {
-    if (gameStarted === true) {
-        return (
-            <div key={`opponentCard`} className="card">
-                <img src={require('../assets/' + 'Deck.png').default} />
-            </div>
-        )
-    } else {
-        return <div />
-    }
+    // if (gameStarted === true) {
+    return (
+        <div key={`opponentCard`} className="card">
+            <img src={require('../assets/' + 'Deck.png').default} />
+        </div>
+    )
+    // } else {
+    //     return <div />
+    // }
 }
 
 function RenderDiscard({ discardPile }) {
