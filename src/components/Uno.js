@@ -1,27 +1,28 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { Button } from 'react-bootstrap';
+import { Form, InputGroup, Modal, Button, ButtonGroup } from 'react-bootstrap';
 import { useSocket } from '../SocketProvider';
 
 function Uno({ room, host, user }) {
     const socket = useSocket();
 
-    const [startToggle, setStartToggle] = useState(false)
+    const [startToggle, setStartToggle] = useState(false);
 
-    const [maxPlayers, setMaxPlayers] = useState([])
-    const [playersList, setPlayersList] = useState([])
-    const [gameStarted, setGameStarted] = useState(false)
-    const [gameOver, setGameOver] = useState(true)
-    const [winner, setWinner] = useState(0)
-    const [turn, setTurn] = useState(0)
-    const [playerHand, setPlayerHand] = useState([])
-    const [playerSeat, setPlayerSeat] = useState(-1)
-    const [currentColor, setCurrentColor] = useState('')
-    const [currentNumber, setCurrentNumber] = useState('')
-    const [discardPile, setDiscardPile] = useState([])
-    const [drawCardPile, setDrawCardPile] = useState([])
-    const [playDirection, setPlayDirection] = useState(true)
-    const [playerBaseHandCount, setPlayerBaseHandCount] = useState(0)
-    const [playerAcrossHandCount, setPlayerAcrossHandCount] = useState(0)
+    const [maxPlayers, setMaxPlayers] = useState([]);
+    const [playersList, setPlayersList] = useState([]);
+    const [gameStarted, setGameStarted] = useState(false);
+    const [gameOver, setGameOver] = useState(true);
+    const [winner, setWinner] = useState(0);
+    const [turn, setTurn] = useState(0);
+    const [playerHand, setPlayerHand] = useState([]);
+    const [playerSeat, setPlayerSeat] = useState(-1);
+    const [currentColor, setCurrentColor] = useState('');
+    const [currentNumber, setCurrentNumber] = useState('');
+    const [discardPile, setDiscardPile] = useState([]);
+    const [drawCardPile, setDrawCardPile] = useState([]);
+    const [playDirection, setPlayDirection] = useState(true);
+    const [playerBaseHandCount, setPlayerBaseHandCount] = useState(0);
+    const [playerAcrossHandCount, setPlayerAcrossHandCount] = useState(0);
+    const [colorSelection, setColorSelection] = useState(false);
 
     const startGame = () => {
         socket.emit('startGame', { room })
@@ -37,13 +38,15 @@ function Uno({ room, host, user }) {
     }
 
     const onCardPlayedHandler = (playedCard) => {
-
+        socket.emit('cardPlayed', { playedCard })
     }
 
     const onCardClicked = (event, card) => {
-        console.log(card);
-        console.log(turn);
-        console.log(playerSeat);
+        console.log("card: " + card);
+        console.log("turn: " + turn);
+        console.log("playerSeat: " + playerSeat);
+        console.log("currentNumber: " + currentNumber);
+        console.log("currentColor: " + currentColor);
         if (turn === playerSeat) {
             const isPlayable = (card) => {
                 if (card.charAt(0) === currentNumber) return true;
@@ -53,6 +56,7 @@ function Uno({ room, host, user }) {
             }
 
             if (isPlayable(card)) {
+                console.log("You played " + card)
                 onCardPlayedHandler(card);
             } else if (card === 'D4W') {
                 const playableCards = playerHand.filter(card => isPlayable(card));
@@ -66,6 +70,12 @@ function Uno({ room, host, user }) {
                 console.log("You cannont play this card.");
             }
         }
+    }
+
+    const colorSelect = (event) => {
+        const colorSelected = event.target.value;
+        socket.emit('colorSelected', { colorSelected })
+        setColorSelection(false);
     }
 
     // On component mount
@@ -86,21 +96,27 @@ function Uno({ room, host, user }) {
             const playerIndex = gameState.players.indexOf(user);
             setPlayerSeat(playerIndex);
             if (playerSeat === 0) {
-                setPlayerAcrossHandCount(gameState.playerHandsCounts[1])
+                setPlayerAcrossHandCount(gameState.playerHandsCounts[1]);
             } else if (playerSeat === 1) {
-                setPlayerAcrossHandCount(gameState.playerHandsCounts[0])
+                setPlayerAcrossHandCount(gameState.playerHandsCounts[0]);
             } else {
-                setPlayerBaseHandCount(gameState.playerHandsCounts[0])
-                setPlayerAcrossHandCount(gameState.playerHandsCounts[1])
+                setPlayerBaseHandCount(gameState.playerHandsCounts[0]);
+                setPlayerAcrossHandCount(gameState.playerHandsCounts[1]);
             }
             setDiscardPile(gameState.discardPile);
             setTurn(gameState.turn);
             setPlayDirection(gameState.playDirection);
+            setCurrentNumber(gameState.currentNumber);
+            setCurrentColor(gameState.currentColor);
             socket.emit('requestHandState');
         })
 
         socket.on('updateHandState', ({ hand }) => {
             setPlayerHand(hand);
+        })
+
+        socket.on('requestColor', () => {
+            setColorSelection(true);
         })
 
     }, [socket])
@@ -144,6 +160,24 @@ function Uno({ room, host, user }) {
                     </div>
                 </div>
             </div>
+            <Modal
+                show={colorSelection}
+                size="sm"
+                backdrop="static"
+                keyboard={false}
+            >
+                <Modal.Header>
+                    <Modal.Title>Select Color</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <ButtonGroup onClick={colorSelect}>
+                        <Button value="R">Red</Button>
+                        <Button value="G">Green</Button>
+                        <Button value="B">Blue</Button>
+                        <Button value="Y">Yellow</Button>
+                    </ButtonGroup>
+                </Modal.Body>
+            </Modal>
         </div>
     )
 }
