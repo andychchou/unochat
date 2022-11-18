@@ -10,6 +10,7 @@ function Uno({ room, host, user }) {
     const [maxPlayers, setMaxPlayers] = useState([]);
     const [playersList, setPlayersList] = useState([]);
     const [gameStarted, setGameStarted] = useState(false);
+    const [gamePaused, setGamePaused] = useState(false);
     const [gameOver, setGameOver] = useState(true);
     const [winner, setWinner] = useState(0);
     const [turn, setTurn] = useState(0);
@@ -23,6 +24,8 @@ function Uno({ room, host, user }) {
     const [playerBaseHandCount, setPlayerBaseHandCount] = useState(0);
     const [playerAcrossHandCount, setPlayerAcrossHandCount] = useState(0);
     const [colorSelection, setColorSelection] = useState(false);
+    const [draw4Check, setDraw4Check] = useState(false);
+    const [cardDrawnPlayable, setCardDrawnPlayable] = useState(false);
 
     const startGame = () => {
         socket.emit('startGame', { room })
@@ -30,24 +33,29 @@ function Uno({ room, host, user }) {
 
     const joinGame = () => {
         // setPlayersList([...playersList, user])
-        socket.emit('joinGame', { user, room })
+        socket.emit('joinGame', { user, room });
     }
 
     const onCardDrawnHandler = () => {
 
     }
 
-    const onCardPlayedHandler = (playedCard) => {
-        socket.emit('cardPlayed', { playedCard })
+    const onCardPlayedHandler = (cardIndex) => {
+        socket.emit('cardPlayed', { cardIndex });
     }
 
-    const onCardClicked = (event, card) => {
+    const onDrawCard = () => {
+        socket.emit('drawClicked');
+    }
+
+    const onCardClicked = (event, card, index) => {
         console.log("card: " + card);
         console.log("turn: " + turn);
         console.log("playerSeat: " + playerSeat);
         console.log("currentNumber: " + currentNumber);
         console.log("currentColor: " + currentColor);
-        if (turn === playerSeat) {
+
+        if (turn === playerSeat && !gamePaused) {
             const isPlayable = (card) => {
                 if (card.charAt(0) === currentNumber) return true;
                 if (card.charAt(1) === currentColor) return true;
@@ -57,14 +65,14 @@ function Uno({ room, host, user }) {
 
             if (isPlayable(card)) {
                 console.log("You played " + card)
-                onCardPlayedHandler(card);
+                onCardPlayedHandler(index);
             } else if (card === 'D4W') {
                 const playableCards = playerHand.filter(card => isPlayable(card));
                 if (playableCards.length = 0) {
-                    onCardPlayedHandler(card);
+                    onCardPlayedHandler(index);
                 } else {
                     console.log("You played Draw 4 illegally.");
-                    onCardPlayedHandler(card);
+                    onCardPlayedHandler(index);
                 }
             } else {
                 console.log("You cannont play this card.");
@@ -74,8 +82,25 @@ function Uno({ room, host, user }) {
 
     const colorSelect = (event) => {
         const colorSelected = event.target.value;
-        socket.emit('colorSelected', { colorSelected })
+        socket.emit('colorSelected', { colorSelected });
         setColorSelection(false);
+    }
+
+    const onDraw4 = () => {
+        socket.emit('draw4');
+    }
+
+    const onChallenge = () => {
+        socket.emit('draw4challenged');
+    }
+
+    const onPlay = () => {
+        const cardIndex = playerHand.length - 1;
+        socket.emit('play', { cardIndex });
+    }
+
+    const onPass = () => {
+        socket.emit('pass');
     }
 
     // On component mount
@@ -91,6 +116,7 @@ function Uno({ room, host, user }) {
 
         socket.on('updateGameState', ({ gameState }) => {
             setGameStarted(gameState.gameStarted);
+            setGamePaused(gameState.gamePaused);
             setMaxPlayers(gameState.maxPlayers);
             setPlayersList(gameState.players);
             const playerIndex = gameState.players.indexOf(user);
@@ -108,16 +134,21 @@ function Uno({ room, host, user }) {
             setPlayDirection(gameState.playDirection);
             setCurrentNumber(gameState.currentNumber);
             setCurrentColor(gameState.currentColor);
+            setDraw4Check(gameState.draw4check);
             socket.emit('requestHandState');
-        })
+        });
 
         socket.on('updateHandState', ({ hand }) => {
             setPlayerHand(hand);
-        })
+        });
 
         socket.on('requestColor', () => {
             setColorSelection(true);
-        })
+        });
+
+        socket.on('cardDrawnPlayable', () => {
+            setCardDrawnPlayable(true);
+        });
 
     }, [socket])
 
@@ -130,29 +161,37 @@ function Uno({ room, host, user }) {
                     </div>
                 </div>
                 <div className="row center-row">
-                    <div className='col-4'></div>
-                    <div className='col-4 d-flex flex-column'>
+                    <div className='col-2'></div>
+                    <div className='col-8 d-flex flex-column'>
                         <div className='row my-4'>
-                            <StartJoinGameButton host={host} user={user} gameStarted={gameStarted} playersList={playersList} maxPlayers={maxPlayers} startGame={startGame} joinGame={joinGame} />
+                            <div classname='col-6'>
+                                <StartJoinGameButton host={host} user={user} gameStarted={gameStarted} playersList={playersList} maxPlayers={maxPlayers} startGame={startGame} joinGame={joinGame} />
+                            </div>
                         </div>
                         <div className='row'>
-                            <div className='col'>
+                            <div className='col d-flex justify-content-end ps-5'>
                                 <RenderDeck gameStarted={gameStarted} />
                             </div>
-                            <div className='col'>
+                            <div className='col d-flex justify-content-start ps-5'>
                                 <RenderDiscard discardPile={discardPile} />
                             </div>
                         </div>
                         <div className='row'>
-                            <div className='col d-flex justify-content-start'>
+                            <div className='col d-flex justify-content-end '>
                                 <p>Deck</p>
                             </div>
                             <div className='col d-flex justify-content-start'>
                                 <p>Discard</p>
                             </div>
                         </div>
+                        <div className='row'>
+                            <div className='col-4'>
+                                <RenderDrawButton turn={turn} playerSeat={playerSeat} gamePaused={gamePaused} onDrawCard={onDrawCard} />
+                            </div>
+                            <RenderDraw4Buttons draw4Check={draw4Check} onDraw4={onDraw4} onChallenge={onChallenge} />
+                        </div>
                     </div>
-                    <div className='col-4'></div>
+                    <div className='col-2'></div>
                 </div>
                 <div className="row">
                     <div className="">
@@ -187,7 +226,7 @@ function RenderPlayerHandDisplay({ playerSeat, playerHand, onCardClicked }) {
     if (playerSeat !== -1) {
         const hand = playerHand.map((card, index) => {
             return (
-                <div key={`playerCard${index}`} className="card" onClick={event => onCardClicked(event, card)}>
+                <div key={`playerCard${index}`} className="card" onClick={event => onCardClicked(event, card, index)}>
                     <img src={require('../assets/' + card + '.png').default} />
                 </div>
             )
@@ -259,6 +298,27 @@ function RenderDiscard({ discardPile }) {
         return (
             <div key={`discard`} className="card">
                 <img src={require('../assets/' + card + '.png').default} />
+            </div>
+        )
+    } else {
+        return <div />
+    }
+}
+
+function RenderDrawButton({ turn, playerSeat, gamePaused, onDrawCard }) {
+    if (turn === playerSeat && !gamePaused) {
+        return <Button onClick={onDrawCard}>Draw</Button>
+    } else {
+        return <Button disabled>Draw</Button>
+    }
+}
+
+function RenderDraw4Buttons({ draw4Check, onDraw4, onChallenge }) {
+    if (draw4Check === true) {
+        return (
+            <div className="col-8">
+                <Button onClick={onDraw4}>Draw 4</Button>
+                <Button onClick={onChallenge}>Challenge</Button>
             </div>
         )
     } else {
