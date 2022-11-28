@@ -25,7 +25,7 @@ function Uno({ room, host, user }) {
     const [playerAcrossHandCount, setPlayerAcrossHandCount] = useState(0);
     const [colorSelection, setColorSelection] = useState(false);
     const [draw4Check, setDraw4Check] = useState(false);
-    const [cardDrawnPlayable, setCardDrawnPlayable] = useState(false);
+    const [cardDrawn, setCardDrawn] = useState(false);
 
     const startGame = () => {
         socket.emit('startGame', { room })
@@ -40,8 +40,24 @@ function Uno({ room, host, user }) {
 
     }
 
-    const onCardPlayedHandler = (cardIndex) => {
-        socket.emit('cardPlayed', { cardIndex });
+    const onCardPlayedHandler = (card, cardIndex) => {
+        if (turn === playerSeat && !gamePaused) {
+            if (isPlayable(card, currentNumber, currentColor)) {
+                console.log("You played " + card)
+                socket.emit('cardPlayed', { cardIndex });
+            } else if (card === 'D4W') {
+                const playableCards = playerHand.filter(card => isPlayable(card, currentNumber, currentColor));
+                console.log('playables: ' + playableCards)
+                if (playableCards.length === 0) {
+                    socket.emit('cardPlayed', { cardIndex });
+                } else {
+                    console.log("You played Draw 4 illegally.");
+                    socket.emit('cardPlayed', { cardIndex });
+                }
+            } else {
+                console.log("You cannont play this card.");
+            }
+        }
     }
 
     const onDrawCard = () => {
@@ -54,30 +70,9 @@ function Uno({ room, host, user }) {
         console.log("playerSeat: " + playerSeat);
         console.log("currentNumber: " + currentNumber);
         console.log("currentColor: " + currentColor);
+        console.log("gamePaused: " + gamePaused)
 
-        if (turn === playerSeat && !gamePaused) {
-            const isPlayable = (card) => {
-                if (card.charAt(0) === currentNumber) return true;
-                if (card.charAt(1) === currentColor) return true;
-                if (card === 'W') return true;
-                return false;
-            }
-
-            if (isPlayable(card)) {
-                console.log("You played " + card)
-                onCardPlayedHandler(index);
-            } else if (card === 'D4W') {
-                const playableCards = playerHand.filter(card => isPlayable(card));
-                if (playableCards.length = 0) {
-                    onCardPlayedHandler(index);
-                } else {
-                    console.log("You played Draw 4 illegally.");
-                    onCardPlayedHandler(index);
-                }
-            } else {
-                console.log("You cannont play this card.");
-            }
-        }
+        onCardPlayedHandler(card, index)
     }
 
     const colorSelect = (event) => {
@@ -95,11 +90,15 @@ function Uno({ room, host, user }) {
     }
 
     const onPlay = () => {
-        const cardIndex = playerHand.length - 1;
-        socket.emit('play', { cardIndex });
+        const cardIndex = playerHand.length - 1
+        const card = playerHand[cardIndex];
+        setGamePaused(false);
+        setCardDrawn(false);
+        onCardClicked(card, cardIndex)
     }
 
     const onPass = () => {
+        setCardDrawn(false);
         socket.emit('pass');
     }
 
@@ -146,8 +145,8 @@ function Uno({ room, host, user }) {
             setColorSelection(true);
         });
 
-        socket.on('cardDrawnPlayable', () => {
-            setCardDrawnPlayable(true);
+        socket.on('drawnCard', () => {
+            setCardDrawn(true);
         });
 
     }, [socket])
@@ -164,7 +163,7 @@ function Uno({ room, host, user }) {
                     <div className='col-2'></div>
                     <div className='col-8 d-flex flex-column'>
                         <div className='row my-4'>
-                            <div classname='col-6'>
+                            <div className='col-6'>
                                 <StartJoinGameButton host={host} user={user} gameStarted={gameStarted} playersList={playersList} maxPlayers={maxPlayers} startGame={startGame} joinGame={joinGame} />
                             </div>
                         </div>
@@ -186,9 +185,10 @@ function Uno({ room, host, user }) {
                         </div>
                         <div className='row'>
                             <div className='col-4'>
-                                <RenderDrawButton turn={turn} playerSeat={playerSeat} gamePaused={gamePaused} onDrawCard={onDrawCard} />
+                                <RenderDrawButton gameStarted={gameStarted} turn={turn} playerSeat={playerSeat} gamePaused={gamePaused} onDrawCard={onDrawCard} />
                             </div>
                             <RenderDraw4Buttons draw4Check={draw4Check} onDraw4={onDraw4} onChallenge={onChallenge} />
+                            <RenderPlayPass cardDrawn={cardDrawn} turn={turn} playerSeat={playerSeat} playerHand={playerHand} onPlay={onPlay} onPass={onPass} />
                         </div>
                     </div>
                     <div className='col-2'></div>
@@ -219,6 +219,13 @@ function Uno({ room, host, user }) {
             </Modal>
         </div>
     )
+}
+
+function isPlayable(card, currentNumber, currentColor) {
+    if (card.charAt(0) === currentNumber) return true;
+    if (card.charAt(card.length - 1) === currentColor) return true;
+    if (card === 'W') return true;
+    return false;
 }
 
 // faced-up cards for active player
@@ -305,8 +312,8 @@ function RenderDiscard({ discardPile }) {
     }
 }
 
-function RenderDrawButton({ turn, playerSeat, gamePaused, onDrawCard }) {
-    if (turn === playerSeat && !gamePaused) {
+function RenderDrawButton({ gameStarted, turn, playerSeat, gamePaused, onDrawCard }) {
+    if (gameStarted && turn === playerSeat && !gamePaused) {
         return <Button onClick={onDrawCard}>Draw</Button>
     } else {
         return <Button disabled>Draw</Button>
@@ -321,6 +328,27 @@ function RenderDraw4Buttons({ draw4Check, onDraw4, onChallenge }) {
                 <Button onClick={onChallenge}>Challenge</Button>
             </div>
         )
+    } else {
+        return <div />
+    }
+}
+
+function RenderPlayPass({ cardDrawn, turn, playerSeat, playerHand, onPlay, onPass, currentNumber, currentColor }) {
+    const PlayButton = () => {
+        if (isPlayable(playerHand[playerHand.length - 1], currentNumber, currentColor)) {
+            return <Button onClick={onPlay}>Play</Button>
+        } else {
+            return <Button disabled>Play</Button>
+        }
+    }
+    if (cardDrawn && turn === playerSeat) {
+        return (
+            <div>
+                <PlayButton />
+                <Button onClick={onPass}>Pass</Button>
+            </div>
+        )
+
     } else {
         return <div />
     }
