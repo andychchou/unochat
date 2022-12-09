@@ -41,7 +41,8 @@ function Uno({ room, host, user }) {
     }
 
     const onCardPlayedHandler = (card, cardIndex) => {
-        if (turn === playerSeat && !gamePaused) {
+        console.log("turn: " + turn + ", playerSeat: " + playerSeat + ", gamePaused: " + gamePaused);
+        if (turn === playerSeat) {
             if (isPlayable(card, currentNumber, currentColor)) {
                 console.log("You played " + card)
                 socket.emit('cardPlayed', { cardIndex });
@@ -65,14 +66,10 @@ function Uno({ room, host, user }) {
     }
 
     const onCardClicked = (event, card, index) => {
-        console.log("card: " + card);
-        console.log("turn: " + turn);
-        console.log("playerSeat: " + playerSeat);
-        console.log("currentNumber: " + currentNumber);
-        console.log("currentColor: " + currentColor);
-        console.log("gamePaused: " + gamePaused)
-
-        onCardPlayedHandler(card, index)
+        console.log("card: " + card + ", turn: " + turn + ", playerSeat: " + playerSeat + ", currentNumber: " + currentNumber + ", currentColor: " + currentColor + ", gamePaused: " + gamePaused);
+        if (!gamePaused) {
+            onCardPlayedHandler(card, index);
+        }
     }
 
     const colorSelect = (event) => {
@@ -94,7 +91,7 @@ function Uno({ room, host, user }) {
         const card = playerHand[cardIndex];
         setGamePaused(false);
         setCardDrawn(false);
-        onCardClicked(card, cardIndex)
+        onCardPlayedHandler(card, cardIndex);
     }
 
     const onPass = () => {
@@ -155,6 +152,10 @@ function Uno({ room, host, user }) {
         <div className="col-sm-auto">
             <div className="d-flex flex-column unobox">
                 <div className="row">
+                    <p>gamePaused: {gamePaused.toString()}</p>
+                    <p>turn: {turn}</p>
+                </div>
+                <div className="row">
                     <div>
                         <CardsDownCountToHand handCount={playerAcrossHandCount} />
                     </div>
@@ -187,8 +188,8 @@ function Uno({ room, host, user }) {
                             <div className='col-4'>
                                 <RenderDrawButton gameStarted={gameStarted} turn={turn} playerSeat={playerSeat} gamePaused={gamePaused} onDrawCard={onDrawCard} />
                             </div>
-                            <RenderDraw4Buttons draw4Check={draw4Check} onDraw4={onDraw4} onChallenge={onChallenge} />
-                            <RenderPlayPass cardDrawn={cardDrawn} turn={turn} playerSeat={playerSeat} playerHand={playerHand} onPlay={onPlay} onPass={onPass} />
+                            <RenderDraw4Buttons draw4Check={draw4Check} onDraw4={onDraw4} onChallenge={onChallenge} playerSeat={playerSeat} turn={turn} />
+                            <RenderPlayPass cardDrawn={cardDrawn} turn={turn} playerSeat={playerSeat} playerHand={playerHand} onPlay={onPlay} onPass={onPass} currentNumber={currentNumber} currentColor={currentColor} />
                         </div>
                     </div>
                     <div className='col-2'></div>
@@ -222,10 +223,15 @@ function Uno({ room, host, user }) {
 }
 
 function isPlayable(card, currentNumber, currentColor) {
-    if (card.charAt(0) === currentNumber) return true;
-    if (card.charAt(card.length - 1) === currentColor) return true;
-    if (card === 'W') return true;
-    return false;
+    if (card.charAt(0) === currentNumber) {
+        return true;
+    } else if (card.charAt(card.length - 1) === currentColor) {
+        return true;
+    } else if (card === 'W') {
+        return true;
+    } else {
+        return false;
+    }
 }
 
 // faced-up cards for active player
@@ -320,8 +326,8 @@ function RenderDrawButton({ gameStarted, turn, playerSeat, gamePaused, onDrawCar
     }
 }
 
-function RenderDraw4Buttons({ draw4Check, onDraw4, onChallenge }) {
-    if (draw4Check === true) {
+function RenderDraw4Buttons({ draw4Check, onDraw4, onChallenge, playerSeat, turn }) {
+    if (draw4Check === true && turn === playerSeat) {
         return (
             <div className="col-8">
                 <Button onClick={onDraw4}>Draw 4</Button>
@@ -334,8 +340,9 @@ function RenderDraw4Buttons({ draw4Check, onDraw4, onChallenge }) {
 }
 
 function RenderPlayPass({ cardDrawn, turn, playerSeat, playerHand, onPlay, onPass, currentNumber, currentColor }) {
+    const card = playerHand[playerHand.length - 1];
     const PlayButton = () => {
-        if (isPlayable(playerHand[playerHand.length - 1], currentNumber, currentColor)) {
+        if (isPlayable(card, currentNumber, currentColor) || card === "D4W") {
             return <Button onClick={onPlay}>Play</Button>
         } else {
             return <Button disabled>Play</Button>
