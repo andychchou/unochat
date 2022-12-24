@@ -36,6 +36,10 @@ function Uno({ room, host, user }) {
         socket.emit('joinGame', { user, room });
     }
 
+    const restartGame = () => {
+        socket.emit('restartGame', { room })
+    }
+
     const onCardDrawnHandler = () => {
 
     }
@@ -99,6 +103,10 @@ function Uno({ room, host, user }) {
         socket.emit('pass');
     }
 
+    const onDebugGameState = () => {
+        socket.emit('debugGameState');
+    }
+
     // On component mount
     useEffect(() => {
         socket.emit('requestGameState', { room });
@@ -152,8 +160,12 @@ function Uno({ room, host, user }) {
         <div className="col-sm-auto">
             <div className="d-flex flex-column unobox">
                 <div className="row">
-                    <p>gamePaused: {gamePaused.toString()}</p>
-                    <p>turn: {turn}</p>
+                    <div>
+                        <DebugGameState onDebugGameState={onDebugGameState} />
+                    </div>
+                    <div>
+                        <ColorDisplay currentColor={currentColor} />
+                    </div>
                 </div>
                 <div className="row">
                     <div>
@@ -165,7 +177,7 @@ function Uno({ room, host, user }) {
                     <div className='col-8 d-flex flex-column'>
                         <div className='row my-4'>
                             <div className='col-6'>
-                                <StartJoinGameButton host={host} user={user} gameStarted={gameStarted} playersList={playersList} maxPlayers={maxPlayers} startGame={startGame} joinGame={joinGame} />
+                                <StartJoinGameButton host={host} user={user} gameStarted={gameStarted} playersList={playersList} maxPlayers={maxPlayers} startGame={startGame} joinGame={joinGame} restartGame={restartGame} />
                             </div>
                         </div>
                         <div className='row'>
@@ -188,7 +200,7 @@ function Uno({ room, host, user }) {
                             <div className='col-4'>
                                 <RenderDrawButton gameStarted={gameStarted} turn={turn} playerSeat={playerSeat} gamePaused={gamePaused} onDrawCard={onDrawCard} />
                             </div>
-                            <RenderDraw4Buttons draw4Check={draw4Check} onDraw4={onDraw4} onChallenge={onChallenge} playerSeat={playerSeat} turn={turn} />
+                            <RenderDraw4Buttons draw4Check={draw4Check} onDraw4={onDraw4} onChallenge={onChallenge} playerSeat={playerSeat} turn={turn} currentColor={currentColor} />
                             <RenderPlayPass cardDrawn={cardDrawn} turn={turn} playerSeat={playerSeat} playerHand={playerHand} onPlay={onPlay} onPass={onPass} currentNumber={currentNumber} currentColor={currentColor} />
                         </div>
                     </div>
@@ -223,7 +235,9 @@ function Uno({ room, host, user }) {
 }
 
 function isPlayable(card, currentNumber, currentColor) {
-    if (card.charAt(0) === currentNumber) {
+    if (card === 'D4W') {
+        return false;
+    } else if (card.charAt(0) === currentNumber) {
         return true;
     } else if (card.charAt(card.length - 1) === currentColor) {
         return true;
@@ -273,7 +287,7 @@ function RenderPlayerBaseHandDisplay({ playerSeat, playerHand, handCount, onCard
     }
 }
 
-function StartJoinGameButton({ host, user, gameStarted, playersList, maxPlayers, startGame, joinGame }) {
+function StartJoinGameButton({ host, user, gameStarted, playersList, maxPlayers, startGame, joinGame, restartGame }) {
     if (host === user) {
         if (gameStarted === false) {
             if (playersList.length > 1) {
@@ -282,7 +296,7 @@ function StartJoinGameButton({ host, user, gameStarted, playersList, maxPlayers,
                 return <p>Waiting for players to join...</p>
             }
         } else {
-            return <Button>Restart Game</Button>
+            return <Button onClick={restartGame}>Restart Game</Button>
         }
     } else {
         if (playersList.length < maxPlayers) {
@@ -326,8 +340,8 @@ function RenderDrawButton({ gameStarted, turn, playerSeat, gamePaused, onDrawCar
     }
 }
 
-function RenderDraw4Buttons({ draw4Check, onDraw4, onChallenge, playerSeat, turn }) {
-    if (draw4Check === true && turn === playerSeat) {
+function RenderDraw4Buttons({ draw4Check, onDraw4, onChallenge, playerSeat, turn, currentColor }) {
+    if (draw4Check === true && turn === playerSeat && currentColor !== 'n') {
         return (
             <div className="col-8">
                 <Button onClick={onDraw4}>Draw 4</Button>
@@ -361,7 +375,32 @@ function RenderPlayPass({ cardDrawn, turn, playerSeat, playerHand, onPlay, onPas
     }
 }
 
-// Test functions
+function ColorDisplay({ currentColor }) {
+    let display = 'Color: '
+    switch (currentColor) {
+        case 'R':
+            display += 'Red';
+            break;
+        case 'G':
+            display += 'Green';
+            break;
+        case 'B':
+            display += 'Blue';
+            break;
+        case 'Y':
+            display += 'Yellow';
+            break;
+        default:
+            display += 'selecting...';
+    }
 
+    return <p>{display}</p>
+
+}
+
+// Test functions
+function DebugGameState({ onDebugGameState }) {
+    return <Button onClick={onDebugGameState}>gameState</Button>
+}
 
 export default Uno;
